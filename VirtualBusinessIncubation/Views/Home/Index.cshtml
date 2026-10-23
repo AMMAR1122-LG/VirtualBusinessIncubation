@@ -1,0 +1,148 @@
+@model VirtualBusinessIncubation.Models.RozgarHub
+@using System
+@using System.Linq
+@{
+    // Standalone homepage design: existing Views/Shared/_Layout.cshtml is unchanged.
+    Layout = null;
+    ViewBag.Title = "RozgarHub - Find the right service";
+    // All database values come directly from the existing RozgarHub Typed DataSet.
+    string searchTerm = ViewBag.SearchTerm as string ?? string.Empty;
+    int? selectedCategoryId = (int?)ViewBag.SelectedCategoryId;
+    int matchingServiceCount = (int)(ViewBag.MatchingServiceCount ?? 0);
+    bool dataUnavailable = (bool)(ViewBag.DataUnavailable ?? false);
+    bool isFiltered = !String.IsNullOrWhiteSpace(searchTerm) || selectedCategoryId.HasValue;
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="RozgarHub connects people with local services and skilled professionals." />
+    <title>@ViewBag.Title</title>
+    <link rel="stylesheet" href="@Url.Content("~/Content/RozgarHubHome.css")" />
+</head>
+<body>
+    <header class="rh-header">
+        <div class="rh-container rh-header-inner">
+            <a class="rh-brand" href="@Url.Action("Index", "Home")" aria-label="RozgarHub homepage">
+                <span class="rh-logo">R<span class="rh-logo-dot">.</span></span>
+                <span>Rozgar<span class="rh-brand-highlight">Hub</span></span>
+            </a>
+            <nav class="rh-nav" aria-label="Main navigation">
+                <a class="rh-nav-active" href="@Url.Action("Index", "Home")">Home</a>
+                <a href="#categories">Categories</a>
+                <a href="#services">Explore Services</a>
+                <a href="#how-it-works">How it works</a>
+            </nav>
+            <div class="rh-header-actions">
+                <a class="rh-about-link" href="@Url.Action("About", "Home")">About</a>
+                <a class="rh-header-cta" href="#services">Find a Service <span aria-hidden="true">&#8599;</span></a>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <section class="rh-hero">
+            <div class="rh-container rh-hero-layout">
+                <div class="rh-hero-main">
+                    <span class="rh-eyebrow"><span class="rh-status-dot"></span> YOUR WORK. OUR PEOPLE. ONE PLATFORM.</span>
+                    <h1>Find the right <em>talent.</em><br />Get things <span class="rh-mark">done.</span></h1>
+                    <p class="rh-hero-copy">From everyday tasks to specialist services, explore what skilled professionals have to offer &mdash; all in one place.</p>
+                    <form class="rh-search" action="@Url.Action("Index", "Home")" method="get" role="search">
+                        <label class="rh-visually-hidden" for="search">Search services</label>
+                        <span class="rh-search-icon" aria-hidden="true">&#8981;</span>
+                        <input id="search" name="search" type="search" maxlength="100" placeholder="What service are you looking for?" value="@searchTerm" />
+                        <button type="submit">Search <span aria-hidden="true">&#8594;</span></button>
+                    </form>
+                    <div class="rh-hero-chips"><span>Popular:</span><a href="#categories">Browse categories</a><a href="#services">Discover services</a></div>
+                </div>
+                <div class="rh-hero-art" aria-hidden="true">
+                    <div class="rh-art-grid"></div>
+                    <span class="rh-orbit rh-orbit-one"></span><span class="rh-orbit rh-orbit-two"></span>
+                    <div class="rh-art-card rh-art-card-primary"><span class="rh-art-check">&#10003;</span><small>YOUR NEXT STEP</small><strong>Opportunity<br />starts here.</strong><span class="rh-art-foot">DISCOVER &middot; CONNECT &middot; GROW</span></div>
+                    <div class="rh-floating rh-floating-one"><span class="rh-floating-icon">&#10022;</span> Skilled professionals</div>
+                    <div class="rh-floating rh-floating-two"><span class="rh-floating-tick">&#10003;</span> Made for your needs</div>
+                </div>
+            </div>
+            <div class="rh-container rh-hero-bottom"><span>DISCOVER SERVICES</span><span class="rh-scroll-line"></span><span>MADE FOR MODERN WORK</span></div>
+        </section>
+
+        <section id="categories" class="rh-categories rh-section">
+            <div class="rh-container">
+                <div class="rh-section-top"><div><span class="rh-section-kicker">01 / EXPLORE</span><h2>Find your <span>category.</span></h2><p>Start with what you need, and explore what is available.</p></div><a class="rh-subtle-link" href="@Url.Action("Index", "Home")">Clear filters &#8599;</a></div>
+                <div class="rh-category-list">
+                    <a class="rh-category-pill @(selectedCategoryId.HasValue ? "" : "rh-pill-active")" href="@Url.Action("Index", "Home", new { search = searchTerm })">All services <span>&#8599;</span></a>
+                    @foreach (var category in Model.categories.OrderBy(category => category.name))
+                    {
+                        <a class="rh-category-pill @(selectedCategoryId == category.id ? "rh-pill-active" : "")" href="@Url.Action("Index", "Home", new { search = searchTerm, categoryId = category.id })">@category.name <span>&#8599;</span></a>
+                    }
+                    @if (Model.categories.Count == 0 && !dataUnavailable)
+                    {
+                        <span class="rh-small-note">Categories will appear here when you add them to RozgarHub.</span>
+                    }
+                </div>
+            </div>
+        </section>
+
+        <section id="services" class="rh-services rh-section">
+            <div class="rh-container">
+                <div class="rh-section-top"><div><span class="rh-section-kicker">02 / DISCOVER</span><h2>Services worth <span>exploring.</span></h2><p>@(isFiltered ? "Results from your RozgarHub database." : "Real listings loaded directly from your RozgarHub database.")</p></div><span class="rh-result-count">@matchingServiceCount matching service@(matchingServiceCount == 1 ? "" : "s")</span></div>
+
+                @if (dataUnavailable)
+                {
+                    <div class="rh-state" role="alert"><span class="rh-state-symbol">!</span><h3>We couldn't load services right now.</h3><p>Please check the RozgarHub SQL Server connection in Web.config and make sure your SQL Server is running.</p></div>
+                }
+                else if (Model.profile_gigs.Count == 0)
+                {
+                    <div class="rh-state">
+                        <span class="rh-state-symbol">&#8981;</span><h3>@(isFiltered ? "No services matched your search." : "Your first services will appear here.")</h3><p>@(isFiltered ? "Try another keyword or category." : "Add categories and available gigs in SQL Server to populate the homepage.")</p>@if (isFiltered)
+                        {<a class="rh-state-link" href="@Url.Action("Index", "Home")">See all services &#8594;</a>}
+                    </div>
+                }
+                else
+                {
+                    <div class="rh-service-grid">
+                        @foreach (var item in Model.profile_gigs.OrderByDescending(gig => gig.average_rating).ThenBy(gig => gig.title))
+                        {
+                            var categoryRow = Model.categories.FindByid(item.category_id);
+                            string categoryName = categoryRow != null ? categoryRow.name : "Other";
+                            string description = item.IsdescriptionNull() ? string.Empty : item.description;
+                            string imageUrl = item.Isimage_urlNull() ? null : item.image_url;
+                            <article class="rh-service-card">
+                                <div class="rh-service-photo">
+                                    @if (!String.IsNullOrWhiteSpace(imageUrl))
+                                    {
+                                        <img src="@Url.Content(imageUrl)" alt="" loading="lazy" />
+                                    }
+                                    else
+                                    {
+                                        <div class="rh-service-placeholder" aria-hidden="true"><span class="rh-placeholder-ring"></span><span class="rh-placeholder-mark">&#10022;</span></div>
+                                    }
+                                    <span class="rh-card-category">@categoryName</span>
+                                </div>
+                                <div class="rh-service-body">
+                                    <div class="rh-rating"><span class="rh-star">&#9733;</span> @item.average_rating.ToString("0.0") <span class="rh-rating-caption">/ 5.0</span></div>
+                                    <h3>@item.title</h3>
+                                    <p class="rh-service-desc">@(String.IsNullOrWhiteSpace(description) ? "Discover this service on RozgarHub." : description)</p>
+                                    <div class="rh-service-meta"><div><span class="rh-price-label">STARTING AT</span><strong>PKR @item.hourly_rate.ToString("N0") <small>/ hr</small></strong></div><span class="rh-card-arrow" aria-label="Details page coming in the next step">&#8599;</span></div>
+                                </div>
+                            </article>
+                        }
+                    </div>
+                    if (matchingServiceCount > Model.profile_gigs.Count)
+                    {
+                        <p class="rh-more-note">Showing the top @Model.profile_gigs.Count of @matchingServiceCount matches. More services and pagination can be added in the next step.</p>
+                    }
+                }
+            </div>
+        </section>
+
+        <section id="how-it-works" class="rh-process rh-section">
+            <div class="rh-container"><div class="rh-section-top"><div><span class="rh-section-kicker">03 / HOW IT WORKS</span><h2>Simple from <span>the start.</span></h2><p>Here's how your RozgarHub marketplace is designed to work.</p></div></div><div class="rh-steps"><div class="rh-step"><span class="rh-step-n">01</span><div class="rh-step-ico">&#8981;</div><h3>Search services</h3><p>Browse a category or search for the work you need.</p></div><div class="rh-step"><span class="rh-step-n">02</span><div class="rh-step-ico">&#9671;</div><h3>Find a match</h3><p>Compare available service listings and choose the right fit.</p></div><div class="rh-step"><span class="rh-step-n">03</span><div class="rh-step-ico">&#8599;</div><h3>Connect & grow</h3><p>Profiles, orders, and payments will be introduced step by step.</p></div></div></div>
+        </section>
+
+        <section class="rh-cta"><div class="rh-container rh-cta-row"><div><span>READY TO EXPLORE?</span><h2>Better work begins<br />with a better connection.</h2></div><a href="#services">Explore services <strong>&#8599;</strong></a></div></section>
+    </main>
+    <footer class="rh-footer"><div class="rh-container rh-footer-row"><span class="rh-footer-brand">Rozgar<span>Hub.</span></span><span>&copy; @DateTime.Now.Year RozgarHub &middot; Service marketplace in progress</span><span><a href="@Url.Action("About", "Home")">About</a> &middot; <a href="@Url.Action("Contact", "Home")">Contact</a></span></div></footer>
+</body>
+</html>
